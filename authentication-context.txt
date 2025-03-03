@@ -1,0 +1,96 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth, loginWithEmailPassword, loginWithGoogleProvider, logout } from './Authentication Service';
+
+// Create Auth Context
+export const AuthContext = createContext();
+
+// Custom hook to use the auth context
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
+// Auth Provider Component
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
+
+  // Login function using email and password
+  const login = async (email, password) => {
+    return loginWithEmailPassword(email, password);
+  };
+
+  // Login with Google
+  const loginWithGoogle = async () => {
+    return loginWithGoogleProvider();
+  };
+
+  // Logout function
+  const signOut = async () => {
+    return logout();
+  };
+
+  // Fetch additional user data from database
+  const fetchUserData = async (uid) => {
+    try {
+      // This would be an API call to your backend or Firestore
+      // Mocking the response for now
+      const mockUserData = {
+        studentId: '100' + uid.substring(0, 6),
+        displayName: 'John Doe',
+        photoURL: '/assets/default-profile.png',
+        diningDollars: 250.75,
+        flexAccount: 125.30,
+        recentTransactions: [
+          { id: 1, date: '2025-03-01T12:30:00', amount: -8.50, location: 'The View' },
+          { id: 2, date: '2025-02-28T18:15:00', amount: -5.25, location: 'Scooter's Coffee' },
+          { id: 3, date: '2025-02-27T14:45:00', amount: -12.00, location: 'Tommie Shop' }
+        ]
+      };
+      
+      setUserData(mockUserData);
+      
+      // Merge basic auth user with additional user data
+      setCurrentUser(prevUser => ({
+        ...prevUser,
+        ...mockUserData
+      }));
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  // Effect for auth state changes
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      setCurrentUser(user);
+      
+      if (user) {
+        await fetchUserData(user.uid);
+      }
+      
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Context value
+  const value = {
+    currentUser,
+    userData,
+    loading,
+    login,
+    loginWithGoogle,
+    signOut,
+    fetchUserData
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+};
+
+export default AuthProvider;
