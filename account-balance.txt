@@ -1,0 +1,108 @@
+import React, { useState } from 'react';
+import { useAuth } from './Authentication Context';
+
+const AccountBalance = () => {
+  const { userData } = useAuth();
+  const [showTransactions, setShowTransactions] = useState(false);
+
+  // Default values if userData is not available
+  const diningDollars = userData?.diningDollars || 250.75;
+  const flexAccount = userData?.flexAccount || 125.30;
+  const transactions = userData?.recentTransactions || [
+    { id: 1, date: '2025-03-01T12:30:00', amount: -8.50, location: 'The View' },
+    { id: 2, date: '2025-02-28T18:15:00', amount: -5.25, location: 'Scooter's Coffee' },
+    { id: 3, date: '2025-02-27T14:45:00', amount: -12.00, location: 'Tommie Shop' }
+  ];
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short', 
+      day: 'numeric',
+      hour: 'numeric', 
+      minute: 'numeric',
+      hour12: true
+    }).format(date);
+  };
+
+  const toggleTransactions = () => {
+    setShowTransactions(!showTransactions);
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto bg-gray-900 rounded-lg overflow-hidden">
+      <div className="p-4 bg-purple-900">
+        <h3 className="text-white font-bold text-lg">Account Balance</h3>
+      </div>
+      
+      <div className="p-4">
+        {/* Balances */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="bg-gray-800 p-3 rounded-lg">
+            <p className="text-gray-400 text-sm mb-1">Dining Dollars</p>
+            <p className="text-white font-bold text-xl">${diningDollars.toFixed(2)}</p>
+          </div>
+          
+          <div className="bg-gray-800 p-3 rounded-lg">
+            <p className="text-gray-400 text-sm mb-1">Flex Account</p>
+            <p className="text-white font-bold text-xl">${flexAccount.toFixed(2)}</p>
+          </div>
+        </div>
+        
+        {/* Transactions toggle */}
+        <button 
+          onClick={toggleTransactions}
+          className="w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white rounded-lg flex justify-between items-center transition-colors"
+        >
+          <span>Recent Transactions</span>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className={`h-5 w-5 transition-transform ${showTransactions ? 'rotate-180' : ''}`} 
+            viewBox="0 0 20 20" 
+            fill="currentColor"
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+        
+        {/* Transactions list */}
+        {showTransactions && (
+          <div className="mt-3 bg-gray-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="py-2 px-3 text-left text-gray-300">Date</th>
+                  <th className="py-2 px-3 text-left text-gray-300">Location</th>
+                  <th className="py-2 px-3 text-right text-gray-300">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((transaction) => (
+                  <tr key={transaction.id} className="border-t border-gray-700">
+                    <td className="py-2 px-3 text-gray-400">{formatDate(transaction.date)}</td>
+                    <td className="py-2 px-3 text-white">{transaction.location}</td>
+                    <td className={`py-2 px-3 text-right ${transaction.amount < 0 ? 'text-red-400' : 'text-green-400'}`}>
+                      ${Math.abs(transaction.amount).toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Add Funds button */}
+        <div className="mt-4">
+          <button 
+            className="w-full py-2 bg-purple-700 hover:bg-purple-800 text-white font-medium rounded-lg transition-colors"
+            onClick={() => window.open('https://stthomas.edu/payment-portal', '_blank')}
+          >
+            Add Funds
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AccountBalance;
