@@ -1,0 +1,54 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './Authentication Context';
+import Dashboard from './Dashboard';
+import Login from './Login Component';
+import './index.css';
+
+// Protected route component to redirect unauthenticated users
+const ProtectedRoute = ({ children }) => {
+  const { currentUser, loading } = useAuth();
+
+  // Show loading state while auth is being checked
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-black">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!currentUser) {
+    return <Navigate to="/login" />;
+  }
+
+  // Render children if authenticated
+  return children;
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+          {/* Catch all undefined routes */}
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App;
